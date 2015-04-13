@@ -1,5 +1,4 @@
-# usb_speed_switch
-HiKey USB speed switching tool.
+# HiKey USB speed switching tool.
 
 To install:
 sudo cp ./usb_speed /usr/bin/usb_speed
