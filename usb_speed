@@ -1,0 +1,267 @@
+#!/bin/bash
+#set -x
+
+# USB port speed setting is found in the kernel debugfs file: /sys/kernel/debug/f72c0000.usb/config
+# This file is automounted by the kernel and usable by normal system users.
+# This file may contain either 0 or 1.
+# The value 0 indicates the USB ports operate in high speed mode.
+# The value 1 indicates the USB ports operate in full speed mode.
+SPEED_HIGH=0
+SPEED_FULL=1
+CONFIG_FILE=/sys/kernel/debug/f72c0000.usb/config
+
+# Variable for action to perform.
+# Constants for consistency and ease of debugging.
+CONST_ACTION_HELP="help"
+CONST_ACTION_QUERY="query"
+CONST_ACTION_SET="set"
+action=$CONST_ACTION_HELP
+
+# Variable for speed to set.
+# Constants for consistency and ease of debugging.
+CONST_SPEED_HIGH="high"
+CONST_SPEED_FULL="full"
+speed=""
+
+# Variable to hold filename used to execute this script.
+# Strip any path from $0, leaving only the file name.
+cmd=`basename "$0"`
+CONST_ALT_COMMAND="get_usb_speed"
+
+# Function to display an error message on stderr.
+function err_msg {
+	echo $1 >&2 
+	return 1
+}
+
+# Low level function used to write to debugfs file to set the speed at which the USB
+# ports operate at.
+# $1 should be either 0 (high speed), or 1 (full speed)
+# Error check for debugfs file existence.
+# Only intended to be used by set_usb_speed
+function write_usb_speed {
+	if [ -e $CONFIG_FILE ]; then
+		echo $1 > $CONFIG_FILE
+	else
+		err_msg "File $CONFIG_FILE not found.  Unable to change USB speed."
+	fi
+	return $?
+}
+
+# Function to set the speed at which the USB ports operate at.
+# $1 should be either 0 (high speed), or 1 (full speed)
+# $1 checked for validity
+# Only intended to be used by set_usb_speed
+function set_usb_speed {
+	case "$1" in
+		"$SPEED_HIGH" | "$SPEED_FULL" )
+			write_usb_speed $1
+		;;
+		* )
+			err_msg "Invalid USB port speed setting ($1)."
+		;;
+	esac
+	return $?
+}
+
+# Function to set the USB ports to operate at high speed.
+function set_usb_speed_high {
+	set_usb_speed $SPEED_HIGH
+}
+
+# Function to set the USB ports to operate at full speed.
+function set_usb_speed_full {
+	set_usb_speed $SPEED_FULL
+}
+
+# Low level function used to read debugfs file to query the speed at which the USB
+# ports operate at.
+# Error check for debugfs file existence.
+# Only intended to be used by set_usb_speed
+function read_usb_speed {
+	local nRc=126
+	if [ -e "$CONFIG_FILE" ]; then
+		nRc=`cat "$CONFIG_FILE"`
+	else
+		err_msg "File $CONFIG_FILE not found.  Unable to read USB speed." 
+	fi
+	return $nRc
+}
+
+# Function used to display help for get_usb_speed.
+#
+# This file supports being called from a symlink named get_usb_speed.  In
+# this case the command can be called with no arguments, or with help
+# arguments.
+function display_help_query {
+	echo -e "get_usb_speed\t\t\tDisplays the current USB bus speed."
+	echo -e "get_usb_speed [-h | --help]\tDisplays this help text."
+}
+
+# Function used to display help for this file.
+function display_help {
+	echo -e "$1 [-h | --help]\t\tDisplays this help text."
+   echo -e "$1 [-q | --query]\tDisplays the current USB bus speed."
+   echo -e "$1 [-s full | high]\tSets the USB bus speed to full or high speed."
+   echo -e "$1 --full\t\tSets the USB bus speed to full speed."
+   echo -e "$1 --high\t\tSets the USB bus speed to high speed."
+}
+
+function display_help_fullspeed {
+	echo -e ""
+	echo -e "The USB ports are set to operate in full speed mode."
+	echo -e ""
+	echo -e "The type A host ports in this mode support low and full speed devices."
+	echo -e "In particular this means keyboards and mice will work when attached"
+	echo -e "to these ports."
+	echo -e ""
+	echo -e "The micro USB OTG host port in this mode only supports full and low"
+	echo -e "speed devices.  Keyboards and mice will work when attached to this"
+	echo -e "port."
+	echo -e ""
+}
+
+
+function display_help_highspeed {
+	echo -e ""
+	echo -e "The USB ports are set to operate in high speed mode."
+	echo -e ""
+	echo -e "The type A host ports in this mode only support high speed devices.  Low"
+	echo -e "and full speed devices will not work when attached to these ports.  In"
+	echo -e "In particular this means keyboards and mice will not work when attached"
+	echo -e "to these ports."
+	echo -e ""
+	echo -e "The micro USB OTG host port in this mode support all speeds.  Any USB"
+	echo -e "should work when attached to the micro USB OTG port."
+	echo -e ""
+}
+
+	
+# High level function used to display help based on $0
+function do_display_help {
+	if [ "$1" = "get_usb_speed" ]; then
+		display_help_query
+	else
+		display_help $1
+	fi
+}
+
+
+# High level function used to query the speed at which the USB ports operate at
+# and display text to the user.
+function do_query_usb_speed {
+	read_usb_speed
+	case "$?" in
+		"$SPEED_HIGH" )
+			echo "USB ports operating at HIGH SPEED."
+			display_help_highspeed
+		;;
+		"$SPEED_FULL" )
+			echo "USB ports operating at FULL SPEED."
+			display_help_fullspeed
+		;;
+		126 )
+		;;
+		* )
+			err_msg "Invalid speed setting ($?)."
+		;;
+	esac
+	return $?
+}
+
+# High level function used to set the speed at which the USB ports operate at.  
+# $1 is called with value in $speed.
+# 
+function do_set_usb_speed {
+	case "$1" in
+		"$CONST_SPEED_HIGH" )
+			set_usb_speed_high
+		;;
+		"$CONST_SPEED_FULL" )
+			set_usb_speed_full
+		;;
+		* )
+			err_msg "Invalid speed parameter ($1) specified."
+		;;
+	esac
+	return $?
+}
+
+# --
+# -- start of script
+# --
+
+# Parse command line parameters
+while :
+do
+	case "$1" in
+   	--full)
+			action=$CONST_ACTION_SET
+			speed=$CONST_SPEED_FULL
+			shift
+		;;
+   	-h | --help)
+			do_display_help "$cmd"
+			exit 0
+		;;
+   	--high)
+			action=$CONST_ACTION_SET
+			speed=$CONST_SPEED_HIGH
+			shift
+		;;
+      -q | --query)
+			action=$CONST_ACTION_QUERY
+			do_query_usb_speed
+			exit 0
+		;;
+		-s | --set)
+			action=$CONST_ACTION_SET
+			speed="$2"
+			shift 2 || break
+		;;
+		--)
+			echo "End of parameters."
+			shift
+			break;
+		;;
+		-*)
+			err_msg "Error: Unknown option: $1"
+			do_display_help "$cmd"
+			exit 1
+		;;
+      *)  # No more options
+			break
+		;;
+	esac
+done
+
+# Check if we were called as get_usb_speed
+# Force action to query if so.
+# Script acts on -h | --help immediately when parsing command line
+# arguments above.
+# Behaviour of get_usb_speed when called with -h or --help depends on this.
+if [ "$cmd" = "get_usb_speed" ]; then
+	action=$CONST_ACTION_QUERY
+	speed=""
+fi
+
+# Execute the action specified.
+case "$action" in
+	$CONST_ACTION_HELP)
+		do_display_help "$cmd"
+		exit 0
+	;;
+	$CONST_ACTION_QUERY)
+		do_query_usb_speed
+		exit $?
+	;;
+	$CONST_ACTION_SET)
+		do_set_usb_speed "$speed"
+		[ $? -eq	0 ] && do_query_usb_speed
+		exit 0
+	;;
+esac
+
+# If we get here, it is an error.
+#err_msg "We shouldn't have gotten here."
+#exit 1
