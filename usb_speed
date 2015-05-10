@@ -108,30 +108,33 @@ display_help() {
 }
 
 display_help_fullspeed() {
+	printf "Either the micro-USB OTG port or the two type A host ports and the\n"
+	printf "expansion USB host port can be used.\n"
 	printf "\n"
-	printf "The USB ports are set to operate in full speed mode.\n"
+	printf "In this mode the micro-USB OTG port, the two type A host ports and\n"
+	printf "the expansion USB host port support full speed (1.5 Mbps) and low\n"
+	printf "speed (400 Kbps) devices.  In particular this means that keyboards\n"
+	printf "and mice will work when attached to these ports.\n"
 	printf "\n"
-	printf "The type A host ports in this mode support low and full speed devices.\n"
-	printf "In particular this means keyboards and mice will work when attached\n"
-	printf "to these ports.\n"
-	printf "\n"
-	printf "The micro USB OTG host port in this mode only supports full and low\n"
-	printf "speed devices. Keyboards and mice will work when attached to this\n"
-	printf "port.\n"
+	printf "To enable this mode plug in and then remove a micro-USB cable connected\n"
+	printf "to a powered up PC, or plug in and remove a micro-USB cable with a type\n"
+	printf "A receptacle.\n"
 	printf "\n"
 }
 
 display_help_highspeed() {
+	printf "Either the micro-USB OTG port or the two type A host ports and the\n"
+	printf "expansion USB host port can be used.\n"
 	printf "\n"
-	printf "The USB ports are set to operate in high speed mode.\n"
+	printf "In this mode the micro-USB OTG port can be attached to a single high\n"
+	printf "speed (480 Mbps), full speed (1.5 Mbps) or low speed (400 Kbps) device.\n"
+	printf "The two type A host ports and the expansion bus host port will ONLY\n"
+	printf "support high speed (480 Mbps) devices.  In particular this means that\n"
+	printf "keyboards and mice will NOT work when attached to these ports.\n"
 	printf "\n"
-	printf "The type A host ports in this mode only support high speed devices. Low\n"
-	printf "and full speed devices will not work when attached to these ports. In\n"
-	printf "In particular this means keyboards and mice will not work when attached\n"
-	printf "to these ports.\n"
-	printf "\n"
-	printf "The micro USB OTG host port in this mode support all speeds. Any USB\n"
-	printf "should work when attached to the micro USB OTG port.\n"
+	printf "To enable this mode plug in and then remove a microUSB cable connected\n"
+	printf "to a powered up PC, or plug in and remove a microUSB cable with a type\n"
+	printf "A receptacle.\n"
 	printf "\n"
 }
 
@@ -150,11 +153,11 @@ do_query_usb_speed() {
 	read_usb_speed
 	case "$?" in
 		"$SPEED_HIGH" )
-			echo "USB ports operating at HIGH SPEED."
+			echo "All USB ports configured for HIGH SPEED mode.\n"
 			display_help_highspeed
 		;;
 		"$SPEED_FULL" )
-			echo "USB ports operating at FULL SPEED."
+			echo "All USB ports configured for FULL SPEED mode.\n"
 			display_help_fullspeed
 		;;
 		126 )
