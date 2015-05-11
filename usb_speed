@@ -191,6 +191,12 @@ do_set_usb_speed() {
 # -- start of script
 # --
 
+if [ "$(id -u)" != "0" ]; then
+	err_msg "\n** This script must be run as root. **\n"
+	do_display_help "$cmd"
+	exit 1
+fi
+
 # Parse command line parameters
 while :
 do
