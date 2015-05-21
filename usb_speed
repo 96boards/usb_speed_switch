@@ -116,10 +116,6 @@ display_help_fullspeed() {
 	printf "speed (400 Kbps) devices.  In particular this means that keyboards\n"
 	printf "and mice will work when attached to these ports.\n"
 	printf "\n"
-	printf "To enable this mode plug in and then remove a micro-USB cable connected\n"
-	printf "to a powered up PC, or plug in and remove a micro-USB cable with a type\n"
-	printf "A receptacle.\n"
-	printf "\n"
 }
 
 display_help_highspeed() {
@@ -131,10 +127,6 @@ display_help_highspeed() {
 	printf "The two type A host ports and the expansion bus host port will ONLY\n"
 	printf "support high speed (480 Mbps) devices.  In particular this means that\n"
 	printf "keyboards and mice will NOT work when attached to these ports.\n"
-	printf "\n"
-	printf "To enable this mode plug in and then remove a microUSB cable connected\n"
-	printf "to a powered up PC, or plug in and remove a microUSB cable with a type\n"
-	printf "A receptacle.\n"
 	printf "\n"
 }
 
